@@ -27,10 +27,11 @@ class App extends Component {
                surname: "Norton",
                salary: 2000,
                increase: false,
-               like: false,
+               like: true,
             },
          ],
          searchValue: "",
+         activeFilter: "all",
       };
    }
 
@@ -56,25 +57,45 @@ class App extends Component {
       }));
    };
 
-   changeSearchValue = ({ currentTarget }) => {
-      this.setState({
-         searchValue: currentTarget.value,
-      });
+   changeSearchValue = (searchValue) => {
+      this.setState({ searchValue });
+   };
+
+   changeActiveFilter = (activeFilter) => {
+      this.setState({ activeFilter });
    };
 
    searchEmployees = (employees, term) => {
       if (!employees.length) return employees;
 
-      return employees.filter(employee => employee.name.includes(term));
-   }
+      return employees.filter((employee) => {
+         const fullName = `${employee.name} ${employee.surname}`;
+         return fullName.toLowerCase().indexOf(term.toLowerCase()) > -1;
+      });
+   };
+
+   filterEmployees = (employees, activeFilter) => {
+      switch (activeFilter) {
+         case "increase": {
+            return employees.filter((employee) => employee.increase);
+         }
+         case "salary": {
+            return employees.filter((employee) => employee.salary > 1000);
+         }
+         default: {
+            return employees;
+         }
+      }
+   };
 
    render() {
-      const { employees, searchValue } = this.state;
+      const { employees, searchValue, activeFilter } = this.state;
 
       const totalEmployees = employees.length;
       const increaseEmployees = employees.filter((employee) => employee.increase).length;
 
-      const filteredEmployees = employees.filter(employee => employee.name.includes(searchValue));
+      let filteredEmployees = this.searchEmployees(employees, searchValue);
+      filteredEmployees = this.filterEmployees(filteredEmployees, this.state.activeFilter);
 
       return (
          <div className="app">
@@ -82,7 +103,10 @@ class App extends Component {
 
             <div className="search-panel">
                <SearchPanel searchValue={searchValue} changeSearchValue={this.changeSearchValue} />
-               <AppFilter />
+               <AppFilter
+                  changeActiveFilter={this.changeActiveFilter}
+                  activeFilter={activeFilter}
+               />
             </div>
 
             <EmployeesList
